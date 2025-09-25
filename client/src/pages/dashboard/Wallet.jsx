@@ -28,7 +28,10 @@ const WalletPage = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/user/transactions`,
         payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true 
+        }
       );
       if (data.success) {
         toast.success("Transaction added");

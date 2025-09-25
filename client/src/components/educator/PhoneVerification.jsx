@@ -31,7 +31,10 @@ const PhoneVerification = ({ phone }) => {
       const { data } = await axios.post(
         `${backendUrl}/api/user/request-phone-verification`, 
         { phone: phoneNumber },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true 
+        }
       );
 
       if (data.success) {
@@ -70,7 +73,10 @@ const PhoneVerification = ({ phone }) => {
       const { data } = await axios.post(
         `${backendUrl}/api/user/verify-phone`, 
         { verificationCode: otp },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true 
+        }
       );
 
       if (data.success) {

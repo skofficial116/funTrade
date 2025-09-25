@@ -46,6 +46,7 @@ const UserProfile = ({ user }) => {
         `${backendUrl}/api/user/upload-avatar`,
         formData,
         {
+          withCredentials: true,
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',

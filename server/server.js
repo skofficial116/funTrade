@@ -17,16 +17,27 @@ await connectDB();
 // Connect Cloudinary
 await connectCloudinary();
 
-// Middleware
-app.use(cors({
-  origin: "https://fun-trade-iota.vercel.app", // frontend URL
-  credentials: true,               // allow cookies/auth headers
-}));
-// app.use(cors({
-//   origin: "http://localhost:5173", // frontend URL
-//   credentials: true,               // allow cookies/auth headers
-// }));
+const allowedOrigins = [
+  "https://fun-trade-iota.vercel.app", // production frontend
+  "http://localhost:5173"              // local dev
+];
 
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
+// Explicitly handle OPTIONS requests
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser()); // <-- parse cookies
 

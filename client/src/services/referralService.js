@@ -9,6 +9,7 @@ class ReferralService {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true
     };
   }
 
@@ -30,7 +31,8 @@ class ReferralService {
   static async validateReferralCode(referralCode) {
     try {
       const response = await axios.get(
-        `${backendUrl}/api/referral/validate/${referralCode}`
+        `${backendUrl}/api/referral/validate/${referralCode}`,
+        { withCredentials: true }
       );
       return response.data;
     } catch (error) {
@@ -43,7 +45,8 @@ class ReferralService {
     try {
       const response = await axios.post(
         `${backendUrl}/api/referral/signup`,
-        { userId, referralCode }
+        { userId, referralCode },
+        { withCredentials: true }
       );
       return response.data;
     } catch (error) {

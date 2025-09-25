@@ -36,7 +36,10 @@ const UserDetails = ({ user }) => {
       const { data } = await axios.put(
         `${backendUrl}/api/user/profile`,
         formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true 
+        }
       );
 
       if (data.success) {

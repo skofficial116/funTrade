@@ -25,7 +25,8 @@ const SignUp = () => {
     try {
       const { data } = await axios.post(
         `${backendUrl}/api/auth/signup`,
-        formData
+        formData,
+        { withCredentials: true }
       );
 
       if (data.success) {

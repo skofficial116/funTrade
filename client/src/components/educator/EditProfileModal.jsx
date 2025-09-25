@@ -29,6 +29,7 @@ const EditProfileModal = ({ onClose }) => {
     try {
       await axios.post(`${backendUrl}/user/updateProfile/`, formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true
       });
       alert("Profile updated successfully");
       onClose();
