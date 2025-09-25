@@ -1,1 +1,10 @@
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_YWxlcnQtdmlwZXItMzcuY2xlcmsuYWNjb3VudHMuZGV2JA
+
+
+VITE_CURRENCY='$'
+
+VITE_BACKEND_URL="https://funtrade.onrender.com"
+# VITE_BACKEND_URL="http://localhost:5000"
+
+
+

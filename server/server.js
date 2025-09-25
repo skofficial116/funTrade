@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import cookieParser from "cookie-parser"; // <-- needed for cookies
+import cookieParser from "cookie-parser";
 import connectDB from "./configs/mongodb.js";
 import connectCloudinary from "./configs/cloudinary.js";
 
@@ -22,7 +22,6 @@ const allowedOrigins = [
   "http://localhost:5173"              // local dev
 ];
 
-// Create CORS options
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -32,16 +31,20 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ]
 };
 
-// Apply CORS with options
-app.use(cors(corsOptions));
+// Apply CORS + JSON + cookies
+app.use(cors(corsOptions));  // already applied globally
 app.use(express.json());
-app.use(cookieParser()); // <-- parse cookies
-
-
+app.use(cookieParser());
 
 // Routes
 app.get("/", (req, res) => res.send("API Working"));
@@ -50,7 +53,9 @@ app.use("/api/user", userRouter);
 app.use("/api/referral", referralRouter);
 
 // 404 fallback
-app.use((req, res) => res.status(404).json({ success: false, message: "Route not found" }));
+app.use((req, res) =>
+  res.status(404).json({ success: false, message: "Route not found" })
+);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
