@@ -19,10 +19,13 @@ await connectCloudinary();
 
 app.use(
   cors({
-    origin: true,          // reflect the request origin automatically
-    credentials: true,     // allow cookies/auth headers
+    origin: "https://fun-trade-iota.vercel.app", // your frontend URL
+    credentials: true, // allow cookies/auth headers
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"], // optional
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 

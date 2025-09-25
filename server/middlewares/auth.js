@@ -3,9 +3,9 @@ import jwt from "jsonwebtoken";
 const authMiddleware = (req, res, next) => {
   // Check if JWT secret is configured
   if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ 
-      success: false, 
-      message: "Server configuration error: JWT_SECRET not set" 
+    return res.status(500).json({
+      success: false,
+      message: "Server configuration error: JWT_SECRET not set"
     });
   }
 
@@ -20,7 +20,13 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded; // { id, role }
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Invalid token" });
+    return res.status(401).json({ success: false, message: "Invalid token" }).cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    
   }
 };
 

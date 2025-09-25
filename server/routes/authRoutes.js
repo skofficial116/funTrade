@@ -201,7 +201,8 @@ authRouter.post("/signin", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd, // only secure in production (https)
-      sameSite: isProd ? "strict" : "lax",
+      sameSite:"none",
+      // sameSite: isProd ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -218,7 +219,8 @@ authRouter.post("/logout", (req, res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? "strict" : "lax",
+    sameSite: "none",
+    // sameSite: isProd ? "strict" : "lax",
   });
   return res.json({ success: true, message: "Logged out successfully" });
 });
