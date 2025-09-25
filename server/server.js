@@ -19,9 +19,13 @@ await connectCloudinary();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173", // frontend URL
+  origin: "https://fun-trade-iota.vercel.app", // frontend URL
   credentials: true,               // allow cookies/auth headers
 }));
+// app.use(cors({
+//   origin: "http://localhost:5173", // frontend URL
+//   credentials: true,               // allow cookies/auth headers
+// }));
 
 app.use(express.json());
 app.use(cookieParser()); // <-- parse cookies
