@@ -16,6 +16,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["student", "educator", "admin"], default: "student" },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationOTP: { type: String, default: null },
+    emailVerificationExpires: { type: Date, default: null },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
 
     // Profile fields used by dashboard
     name: { type: String, default: null },
