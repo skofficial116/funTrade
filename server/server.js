@@ -22,7 +22,8 @@ const allowedOrigins = [
   "http://localhost:5173"              // local dev
 ];
 
-app.use(cors({
+// Create CORS options
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -31,13 +32,12 @@ app.use(cors({
     }
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-// Explicitly handle OPTIONS requests
-app.options("*", cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+// Apply CORS with options
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser()); // <-- parse cookies
 
