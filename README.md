@@ -154,6 +154,11 @@ Before running this application, make sure you have the following installed:
    NODE_ENV=development
    PORT=5000
    FRONTEND_URL=http://localhost:5173
+   APP_NAME=FunTrade
+   
+   # Email Configuration (SendGrid)
+   SENDGRID_API_KEY=your-sendgrid-api-key
+   SENDGRID_FROM_EMAIL=your-verified-sender@yourdomain.com
    ```
 
 ### Client Environment Variables
@@ -169,6 +174,41 @@ VITE_API_URL=http://localhost:5000
 # Other configurations
 VITE_CLOUDINARY_CLOUD_NAME=your-cloudinary-name
 ```
+
+## ✉️ Email Configuration (SendGrid)
+
+This application uses SendGrid for sending transactional emails (verification, password reset, etc.). Follow these steps to set it up:
+
+1. **Create a SendGrid Account**
+   - Sign up at [SendGrid](https://signup.sendgrid.com/)
+   - Verify your email address
+   
+2. **Create an API Key**
+   - Go to [SendGrid API Keys](https://app.sendgrid.com/settings/api_keys)
+   - Click "Create API Key"
+   - Give it a name (e.g., "FunTrade Production")
+   - Select "Restricted Access" and enable only "Mail Send" permissions
+   - Copy the generated API key
+
+3. **Verify a Sender Identity**
+   - Go to [Sender Authentication](https://app.sendgrid.com/settings/sender_auth)
+   - Click "Verify a Single Sender"
+   - Fill in the sender details (this will be your "from" email)
+   - Click "Create"
+   - Check your email and click the verification link
+
+4. **Update Environment Variables**
+   - Add the following to your `.env` file:
+   ```env
+   SENDGRID_API_KEY=your-generated-api-key-here
+   SENDGRID_FROM_EMAIL=your-verified-email@yourdomain.com
+   APP_NAME=FunTrade  # This will be used in the email subject/from name
+   ```
+
+5. **Test the Email Service**
+   - Start your server
+   - The application will automatically test the SendGrid connection on startup
+   - Check your server logs for the connection status
 
 ## 🏃‍♂️ Running the Application
 

@@ -1,82 +1,74 @@
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
-// Email configuration with better error handling and timeouts
-console.log('Initializing email service...');
-const emailService = process.env.EMAIL_SERVICE || 'gmail';
-const emailUser = process.env.EMAIL_USER;
+import sgMail from '@sendgrid/mail';
 
-// Only log password status, not the actual password
-console.log('Email Service:', emailService);
-console.log('Email User:', emailUser ? 'Configured' : 'NOT CONFIGURED');
-console.log('Email Password:', process.env.EMAIL_PASSWORD ? '******' : 'NOT CONFIGURED');
+// Initialize SendGrid
+console.log('Initializing SendGrid email service...');
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@funtrade.com';
+const appName = process.env.APP_NAME || 'FunTrade';
 
-// Create a test email configuration
-const emailConfig = {
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 587,
-  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: emailUser,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  tls: {
-    // Do not fail on invalid certs
-    rejectUnauthorized: false
-  },
-  // Connection timeout (in ms)
-  connectionTimeout: 10000, // 10 seconds
-  // Socket timeout (in ms)
-  socketTimeout: 30000, // 30 seconds
-  // Logging
-  logger: process.env.NODE_ENV !== 'production',
-  // Disable STARTTLS if needed
-  ignoreTLS: process.env.EMAIL_IGNORE_TLS === 'true',
-  // Disable SSL if needed
-  disableFileAccess: true,
-  disableUrlAccess: true
+// Configure SendGrid
+if (sendgridApiKey) {
+  sgMail.setApiKey(sendgridApiKey);
+  console.log('✅ SendGrid initialized');
+} else {
+  console.warn('⚠️ SENDGRID_API_KEY not set. Emails will not be sent.');
+}
+
+// Wrapper for SendGrid to maintain compatibility with existing code
+export const transporter = {
+  async sendMail(mailOptions) {
+    if (!sendgridApiKey) {
+      throw new Error('SendGrid API key not configured');
+    }
+
+    const msg = {
+      to: mailOptions.to,
+      from: mailOptions.from || `"${appName}" <${fromEmail}>`,
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+      text: mailOptions.text || mailOptions.subject, // Fallback text content
+    };
+
+    try {
+      const response = await sgMail.send(msg);
+      console.log(`Email sent to ${mailOptions.to}`, response[0].statusCode);
+      return {
+        messageId: response[0].headers['x-message-id'],
+        response: response[0].statusCode
+      };
+    } catch (error) {
+      console.error('SendGrid error:', error.response?.body || error.message);
+      throw error;
+    }
+  }
 };
 
-export const transporter = nodemailer.createTransport(emailConfig);
-
-// Verify connection configuration with timeout
+// Verify SendGrid connection
 const verifyEmailConnection = async () => {
-  if (!emailUser || !process.env.EMAIL_PASSWORD) {
-    console.warn('⚠️ Email service not fully configured. Emails will not be sent.');
-    console.warn('Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
-    if (emailService === 'gmail') {
-      console.warn('For Gmail, you need to:');
-      console.warn('1. Enable 2-factor authentication');
-      console.warn('2. Generate an App Password: https://myaccount.google.com/apppasswords');
-      console.warn('3. Use the App Password instead of your regular password');
-    }
+  if (!sendgridApiKey) {
+    console.warn('⚠️ SendGrid API key not configured. Emails will not be sent.');
+    console.warn('Please set SENDGRID_API_KEY environment variable.');
     return false;
   }
 
   try {
-    await new Promise((resolve, reject) => {
-      // Set a timeout for the verification
-      const timeout = setTimeout(() => {
-        reject(new Error('Email verification timed out after 10 seconds'));
-      }, 10000);
-
-      transporter.verify((error, success) => {
-        clearTimeout(timeout);
-        if (error) {
-          console.error('❌ Email service connection failed:', error.message);
-          console.error('Please check your email configuration and internet connection.');
-          reject(error);
-        } else {
-          console.log('✅ Email service is ready to send messages');
-          console.log(`Service: ${emailService}`);
-          console.log(`From: ${emailUser}`);
-          resolve(success);
-        }
-      });
+    // Test the connection by sending a test email to the from address
+    await sgMail.send({
+      to: fromEmail,
+      from: fromEmail,
+      subject: `${appName} - Email Service Test`,
+      text: 'This is a test email to verify SendGrid configuration.',
+      html: '<p>This is a test email to verify SendGrid configuration.</p>'
     });
+    
+    console.log('✅ SendGrid is ready to send messages');
+    console.log(`From: ${fromEmail}`);
     return true;
   } catch (error) {
-    console.error('❌ Email service verification failed:', error.message);
+    console.error('❌ SendGrid connection test failed:', error.response?.body?.errors || error.message);
     console.warn('Emails may not be sent. The application will continue to run without email functionality.');
     return false;
   }
@@ -100,24 +92,28 @@ export const sendVerificationEmail = async (email, otp) => {
   }
 
   const mailOptions = {
-    from: `"${process.env.APP_NAME || 'Your App'}" <${process.env.EMAIL_USER || 'noreply@example.com'}>`,
     to: email,
+    from: `"${appName}" <${fromEmail}>`,
     subject: 'Verify Your Email Address',
+    text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Email Verification</h2>
         <p>Thank you for signing up! Please use the following OTP to verify your email address:</p>
-        <div style="background: #f4f4f4; padding: 10px; font-size: 24px; letter-spacing: 5px; text-align: center; margin: 20px 0;">
+        <div style="background: #f4f4f4; padding: 15px; font-size: 24px; letter-spacing: 5px; text-align: center; margin: 20px 0; border-radius: 5px; font-weight: bold;">
           ${otp}
         </div>
         <p>This OTP will expire in 10 minutes.</p>
         <p>If you didn't create an account, please ignore this email.</p>
+        <p style="margin-top: 30px; color: #666; font-size: 12px;">
+          This is an automated message, please do not reply to this email.
+        </p>
       </div>
     `,
   };
 
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!sendgridApiKey) {
       throw new Error('Email service not configured');
     }
     
@@ -128,10 +124,9 @@ export const sendVerificationEmail = async (email, otp) => {
     console.error('❌ Failed to send verification email:', error.message);
     // In production, you might want to log this to a monitoring service
     if (process.env.NODE_ENV === 'production') {
-      // Log to your error tracking service here
       console.error('Email sending error details:', {
         to: email,
-        error: error.message,
+        error: error.response?.body || error.message,
         stack: error.stack
       });
     }
@@ -152,28 +147,34 @@ export const sendPasswordResetEmail = async (email, token) => {
   console.log(`Reset URL: ${resetUrl}`);
   
   const mailOptions = {
-    from: `"${process.env.APP_NAME || 'Your App'}" <${process.env.EMAIL_USER || 'noreply@example.com'}>`,
     to: email,
+    from: `"${appName}" <${fromEmail}>`,
     subject: 'Password Reset Request',
+    text: `You requested a password reset. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Reset Your Password</h2>
-        <p>You requested a password reset. Click the link below to set a new password:</p>
-        <div style="margin: 20px 0;">
-          <a href="${resetUrl}" style="background: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+        <p>You requested a password reset. Click the button below to set a new password:</p>
+        <div style="margin: 25px 0; text-align: center;">
+          <a href="${resetUrl}" 
+             style="background: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; 
+                    border-radius: 4px; display: inline-block; font-weight: bold;">
             Reset Password
           </a>
         </div>
         <p>Or copy and paste this link into your browser:</p>
-        <p>${resetUrl}</p>
+        <p style="word-break: break-all;">${resetUrl}</p>
         <p>This link will expire in 1 hour.</p>
         <p>If you didn't request a password reset, please ignore this email.</p>
+        <p style="margin-top: 30px; color: #666; font-size: 12px;">
+          This is an automated message, please do not reply to this email.
+        </p>
       </div>
     `,
   };
 
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!sendgridApiKey) {
       throw new Error('Email service not configured');
     }
     
@@ -184,10 +185,9 @@ export const sendPasswordResetEmail = async (email, token) => {
     console.error('❌ Failed to send password reset email:', error.message);
     // In production, you might want to log this to a monitoring service
     if (process.env.NODE_ENV === 'production') {
-      // Log to your error tracking service here
       console.error('Password reset email error details:', {
         to: email,
-        error: error.message,
+        error: error.response?.body || error.message,
         stack: error.stack
       });
     }
